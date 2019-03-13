@@ -5,24 +5,8 @@ defmodule RPN do
 
   @doc """
   ## Examples
-
-      iex> RPN.calculate("3 6 * 2 /")
-      9.0
-
-      iex> RPN.calculate("3 4 2 * -")
-      -5.0
-
-      iex> RPN.calculate("1 30 -")
-      -29.0
-
-      iex> RPN.calculate("2 5 +")
-      7.0
-
-      iex> RPN.calculate("1")
-      1.0
-
       iex> RPN.calculate("2 5 - abs")
-      3.0
+      {:ok, 3.0}
   """
 
   @type error :: term()
@@ -40,15 +24,19 @@ defmodule RPN do
 
   @spec calculate(binary()) :: {:ok, float()} | {:error, error}
   def calculate(expression) do
-    expression
-    |> parse
-    |> eval([])
+    with {:ok, tokens} <- parse(expression),
+         {:ok, result} <- eval(tokens, []) do
+      {:ok, result}
+    end
   end
 
   defp parse(code) do
-    code
-    |> String.split(" ")
-    |> Enum.map(&to_token/1)
+    result =
+      code
+      |> String.split(" ")
+      |> Enum.map(&to_token/1)
+
+    {:ok, result}
   end
 
   defp to_token(str) when str in @operator_in_strong do
@@ -62,7 +50,7 @@ defmodule RPN do
   end
 
   defp eval([], [acc]) do
-    acc
+    {:ok, acc}
   end
 
   defp eval([x | xs] = tokens, [num1, num2 | rest])
