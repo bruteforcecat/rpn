@@ -25,4 +25,18 @@ defmodule RPNTest do
   test "return 3 given 2 5 - abs" do
     assert RPN.calculate("2 5 - abs") == {:ok, 3.0}
   end
+
+  test "return error given empty string" do
+    assert RPN.calculate("") == {:error, :empty_string_is_not_allowed}
+  end
+
+  test "return error given invalid token" do
+    assert RPN.calculate("2 5 explode") == {:error, :invalid_token}
+  end
+
+  test "return error given invalid expression" do
+    assert RPN.calculate("2 5") == {:error, :invalid_expression}
+  end
+
+
 end

@@ -9,7 +9,7 @@ defmodule RPN do
       {:ok, 3.0}
   """
 
-  @type error :: term()
+  @type error :: :empty_string_is_not_allowed | :invalid_token | :invalid_expression
   @type unary_operator :: :abs
   @type binary_operator :: :+ | :- | :* | :/
   @type operator :: unary_operator | binary_operator
@@ -30,23 +30,47 @@ defmodule RPN do
     end
   end
 
-  defp parse(code) do
-    result =
-      code
-      |> String.split(" ")
-      |> Enum.map(&to_token/1)
+  defp parse("") do
+    {:error, :empty_string_is_not_allowed}
+  end
 
-    {:ok, result}
+  defp parse(expression) do
+    case expression
+         |> String.split(" ")
+         |> Enum.reduce_while(
+           [],
+           fn x, acc ->
+             case to_token(x) do
+               {:ok, token} ->
+                 {:cont, [token | acc]}
+
+               {:error, error} ->
+                 {:halt, {:error, error}}
+             end
+           end
+         ) do
+      {:error, error} ->
+        {:error, error}
+
+      tokens ->
+        {:ok, Enum.reverse(tokens)}
+    end
   end
 
   defp to_token(str) when str in @operator_in_strong do
-    str
-    |> String.to_atom()
+    {:ok,
+     str
+     |> String.to_atom()}
   end
 
   defp to_token(str) do
-    {num, _} = Float.parse(str)
-    num
+    case Float.parse(str) do
+      :error ->
+        {:error, :invalid_token}
+
+      {num, _} ->
+        {:ok, num}
+    end
   end
 
   defp eval([], [acc]) do
@@ -67,6 +91,10 @@ defmodule RPN do
 
   defp eval([x | xs], acc) do
     eval(xs, [x | acc])
+  end
+
+  defp eval(_, _) do
+    {:error, :invalid_expression}
   end
 
   defp compute(:abs, num) do
