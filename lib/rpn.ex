@@ -7,6 +7,9 @@ defmodule RPN do
   ## Examples
       iex> RPN.calculate("2 5 - abs")
       {:ok, 3.0}
+
+      iex> RPN.calculate("abs")
+      {:error, :invalid_expression}
   """
 
   @type error :: :empty_string_is_not_allowed | :invalid_token | :invalid_expression
@@ -73,8 +76,12 @@ defmodule RPN do
     end
   end
 
-  defp eval([], [acc]) do
+  defp eval([], [acc]) when is_float(acc) do
     {:ok, acc}
+  end
+
+  defp eval([], [_]) do
+    {:error, :invalid_expression}
   end
 
   defp eval([x | xs] = tokens, [num1, num2 | rest])
